@@ -23,15 +23,17 @@ const FileUpload = () => {
               'Content-Type': 'multipart/form-data',
             },
           });
+          navigate(0)
           }else{                                                                                                  
           const response = await axios.post('http://localhost:5000/v1/contacts', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
           });
+          navigate(0)
         }
         console.log('File uploaded successfully:', response.data.msg);
-        navigate(0)
+        
           
           
         } catch (error) {
