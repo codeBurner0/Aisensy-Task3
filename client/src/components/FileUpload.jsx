@@ -29,9 +29,9 @@ const FileUpload = () => {
               'Content-Type': 'multipart/form-data',
             },
           });
-          console.log('File uploaded successfully:', response.data.msg);
-          navigate(0)
         }
+        console.log('File uploaded successfully:', response.data.msg);
+        navigate(0)
           
           
         } catch (error) {

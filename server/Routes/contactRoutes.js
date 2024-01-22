@@ -6,6 +6,8 @@ const Contact=require('../Database/models/contactModel')
 const csv=require('csvtojson');
 const excelTOJson=require('convert-excel-to-json');
 const path=require('path');
+const json2csv = require('json2csv').parse;
+const ExcelJS = require('exceljs');
 contactroute.use(express.json());
 contactroute.use(cors());
 contactroute.use(express.static(path.resolve(__dirname,'public')))
@@ -73,4 +75,59 @@ contactroute.post('/all-contacts',async(req,res)=>{
     res.status(200).json({msg:result})
 })
 
+contactroute.post('/download-csv', async (req, res) => {
+    try {
+      const selectedRows = req.body.selectedRows; // Assuming the frontend sends an array of selected row IDs
+  
+      // Fetch selected contacts from MongoDB based on IDs
+      const selectedContacts = await Contact.find({ id: { $in: selectedRows } });
+  
+      // Convert selected contacts to CSV format
+      const csvData = json2csv(selectedContacts);
+  
+      // Set response headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=selected-contacts.csv');
+      res.status(200).send(csvData);
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  
+  // Endpoint to get and download selected rows as XLSX
+  contactroute.post('/download-xlsx', async (req, res) => {
+    try {
+      const selectedRowIds = req.body.selectedRows;
+  
+      // Fetch selected contacts from MongoDB based on IDs
+      const selectedContacts = await Contact.find({ id: { $in: selectedRowIds } });
+  
+      // Create a new Excel workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Selected Contacts');
+  
+      // Add headers to the worksheet
+      const headerRow = Object.keys(selectedContacts[0]);
+      worksheet.addRow(headerRow);
+  
+      // Add data to the worksheet
+      selectedContacts.forEach((contact) => {
+        const row = Object.values(contact);
+        worksheet.addRow(row);
+      });
+  
+      // Set response headers for file download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=selected-contacts.xlsx');
+      
+      // Write the workbook to the response
+      await workbook.xlsx.write(res);
+      
+      res.status(200).end();
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 module.exports=contactroute
